@@ -73,17 +73,17 @@ class RdmaCtrl::RdmaCtrlImpl {
     // RDMA_LOG(DBG) << "rdma controler close: does not handle any future connections.";
   }
 
-  RNicHandler* open_thread_local_device(DevIdx idx) {
+  RNicHandler* open_thread_local_device(DevIdx idx, int gid = 0) {
     // already openend device
     if (rnic_instance() != nullptr)
       return rnic_instance();
 
-    auto handler = open_device(idx);
+    auto handler = open_device(idx, gid);
     rnic_instance() = handler;
     return rnic_instance();
   }
 
-  RNicHandler* open_device(DevIdx idx) {
+  RNicHandler* open_device(DevIdx idx, int gid = 0) {
     RNicHandler* rnic = nullptr;
 
     struct ibv_device** dev_list = nullptr;
@@ -126,7 +126,7 @@ class RdmaCtrl::RdmaCtrlImpl {
 
     // success open
     {
-      rnic = new RNicHandler(idx.dev_id, idx.port_id, ib_ctx, pd, port_attr.lid);
+      rnic = new RNicHandler(idx.dev_id, idx.port_id, ib_ctx, pd, port_attr.lid, gid);
     }
 
     OPEN_END:
@@ -542,14 +542,14 @@ RdmaCtrl::get_device() {
 
 inline __attribute__((always_inline))
 RNicHandler*
-RdmaCtrl::open_thread_local_device(DevIdx idx) {
-  return impl_->open_thread_local_device(idx);
+RdmaCtrl::open_thread_local_device(DevIdx idx, int gid = 0) {
+  return impl_->open_thread_local_device(idx, gid);
 }
 
 inline __attribute__((always_inline))
 RNicHandler*
-RdmaCtrl::open_device(DevIdx idx) {
-  return impl_->open_device(idx);
+RdmaCtrl::open_device(DevIdx idx, int gid) {
+  return impl_->open_device(idx, gid);
 }
 
 inline __attribute__((always_inline)) void RdmaCtrl::close_device() {

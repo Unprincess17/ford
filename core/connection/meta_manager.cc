@@ -42,8 +42,11 @@ MetaManager::MetaManager() {
   idx.dev_id = 0;
   idx.port_id = 1;
 
+  // Using `gid=1` for the first RNIC's first port
+  int gid = 1;
+
   // Open device
-  opened_rnic = global_rdma_ctrl->open_device(idx);
+  opened_rnic = global_rdma_ctrl->open_device(idx, gid);
 
   for (auto& remote_node : remote_nodes) {
     GetMRMeta(remote_node);

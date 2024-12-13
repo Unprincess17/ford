@@ -173,7 +173,7 @@ class RRCQP : public QP {
         goto CONN_END;
       }
 
-      if (!RCQPImpl::ready2send<F>(qp_)) {
+      if (!RCQPImpl::ready2send<F>(qp_, rnic_)) {
         RDMA_LOG(WARNING) << "change qp status to ready to send error: " << strerror(errno);
         ret = ERR;
         goto CONN_END;

@@ -192,7 +192,7 @@ class RCQPImpl {
     qp_attr.ah_attr.is_global = 1;
     qp_attr.ah_attr.grh.dgid.global.subnet_prefix = attr.addr.subnet_prefix;
     qp_attr.ah_attr.grh.dgid.global.interface_id = attr.addr.interface_id;
-    qp_attr.ah_attr.grh.sgid_index = 0;
+    qp_attr.ah_attr.grh.sgid_index = rnic->gid;
     qp_attr.ah_attr.grh.flow_label = 0;
     qp_attr.ah_attr.grh.hop_limit = 255;
 
@@ -227,7 +227,7 @@ class RCQPImpl {
     qp_attr.ah_attr.is_global = 1;
     qp_attr.ah_attr.grh.dgid.global.subnet_prefix = attr.addr.subnet_prefix;
     qp_attr.ah_attr.grh.dgid.global.interface_id = attr.addr.interface_id;
-    qp_attr.ah_attr.grh.sgid_index = 0;
+    qp_attr.ah_attr.grh.sgid_index = rnic->gid;
     qp_attr.ah_attr.grh.flow_label = 0;
     qp_attr.ah_attr.grh.hop_limit = 255;
 
@@ -237,7 +237,7 @@ class RCQPImpl {
   }
 
   template <RCConfig (* F)(void)>
-  static bool ready2send(ibv_qp* qp) {
+  static bool ready2send(ibv_qp* qp, RNicHandler *rnic) {
     auto config = F();
 
     int rc, flags;
@@ -250,6 +250,7 @@ class RCQPImpl {
     qp_attr.rnr_retry = 7;
     qp_attr.max_rd_atomic = config.max_rd_atomic;
     qp_attr.max_dest_rd_atomic = config.max_dest_rd_atomic;
+    qp_attr.ah_attr.grh.sgid_index = rnic->gid;
 
     flags = IBV_QP_STATE | IBV_QP_SQ_PSN | IBV_QP_TIMEOUT | IBV_QP_RETRY_CNT | IBV_QP_RNR_RETRY |
       IBV_QP_MAX_QP_RD_ATOMIC;
@@ -360,7 +361,7 @@ class UDQPImpl {
     if (!ready2rcv(qp, rnic)) {
       RDMA_LOG(WARNING) << "change ud qp to ready to recv error: " << strerror(errno);
     }
-    if (!ready2send(qp, config)) {
+    if (!ready2send(qp, config, rnic)) {
       RDMA_LOG(WARNING) << "change ud qp to ready to send error: " << strerror(errno);
     }
   }
@@ -377,6 +378,7 @@ class UDQPImpl {
     qp_attr.pkey_index = 0;
     qp_attr.port_num = rnic->port_id;
     qp_attr.qkey = config.qkey;
+    qp_attr.ah_attr.grh.sgid_index = rnic->gid;
 
     if ((rc = ibv_modify_qp(qp, &qp_attr, flags)) != 0) {
       RDMA_LOG(WARNING) << "modify ud qp to init error: " << strerror(errno);
@@ -387,16 +389,18 @@ class UDQPImpl {
     int rc, flags = IBV_QP_STATE;
     struct ibv_qp_attr qp_attr = {};
     qp_attr.qp_state = IBV_QPS_RTR;
+    qp_attr.ah_attr.grh.sgid_index = rnic->gid;
 
     rc = ibv_modify_qp(qp, &qp_attr, flags);
     return rc == 0;
   }
 
-  static bool ready2send(ibv_qp* qp, UDConfig& config) {
+  static bool ready2send(ibv_qp* qp, UDConfig& config, RNicHandler* rnic) {
     int rc, flags = 0;
     struct ibv_qp_attr qp_attr = {};
     qp_attr.qp_state = IBV_QPS_RTS;
     qp_attr.sq_psn = config.psn;
+    qp_attr.ah_attr.grh.sgid_index = rnic->gid; 
 
     flags = IBV_QP_STATE | IBV_QP_SQ_PSN;
     rc = ibv_modify_qp(qp, &qp_attr, flags);
