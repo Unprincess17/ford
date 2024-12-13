@@ -39,7 +39,7 @@ bool DTX::ExeRO(coro_yield_t& yield) {
   std::vector<HashRead> pending_hash_ro;
 
   // Issue reads
-  // RDMA_LOG(DBG) << "coro: " << coro_id << " tx_id: " << tx_id << " issue read ro";
+  RDMA_LOG(DBG) << "coro: " << coro_id << " tx_id: " << tx_id << " issue read ro";
   if (!IssueReadRO(pending_direct_ro, pending_hash_ro)) return false;
 
   // Yield to other coroutines when waiting for network replies
@@ -71,17 +71,18 @@ bool DTX::ExeRW(coro_yield_t& yield) {
   std::list<InsertOffRead> pending_next_off_rw;
 
   if (!IssueReadRO(pending_direct_ro, pending_hash_ro)) return false;  // RW transactions may also have RO data
-// RDMA_LOG(DBG) << "coro: " << coro_id << " tx_id: " << tx_id << " issue read rorw";
+RDMA_LOG(DBG) << "coro: " << coro_id << " tx_id: " << tx_id << " issue read rorw";
 #if READ_LOCK
   if (!IssueReadLock(pending_cas_rw, pending_hash_rw, pending_insert_off_rw)) return false;
 #else
   if (!IssueReadRW(pending_direct_rw, pending_hash_rw, pending_insert_off_rw)) return false;
 #endif
 
+  RDMA_LOG(DBG) << "coro: " << coro_id << " tx_id: " << tx_id << " Waiting for network replies";
   // Yield to other coroutines when waiting for network replies
   coro_sched->Yield(yield, coro_id);
 
-  // RDMA_LOG(DBG) << "coro: " << coro_id << " tx_id: " << tx_id << " check read rorw";
+  RDMA_LOG(DBG) << "coro: " << coro_id << " tx_id: " << tx_id << " check read rorw";
   bool res = false;
 #if READ_LOCK
   res = CheckReadRORW(pending_direct_ro,

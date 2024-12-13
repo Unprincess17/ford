@@ -5,6 +5,7 @@
 
 #include <atomic>
 #include <unordered_map>
+#include <execinfo.h>
 
 #include "base/common.h"
 #include "memstore/hash_store.h"

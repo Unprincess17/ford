@@ -48,7 +48,7 @@ MetaManager::MetaManager() {
   for (auto& remote_node : remote_nodes) {
     GetMRMeta(remote_node);
   }
-  // RDMA_LOG(INFO) << "client: All remote mr meta received!";
+  RDMA_LOG(INFO) << "client: All remote mr meta received!";
 }
 
 node_id_t MetaManager::GetMemStoreMeta(std::string& remote_ip, int remote_port) {
@@ -110,7 +110,7 @@ node_id_t MetaManager::GetMemStoreMeta(std::string& remote_ip, int remote_port) 
       memcpy(&meta, (HashMeta*)(snooper + i * sizeof(HashMeta)), sizeof(HashMeta));
       primary_hash_metas[meta.table_id] = meta;
       primary_table_nodes[meta.table_id] = remote_machine_id;
-      // RDMA_LOG(INFO) << "primary_node_ip: " << remote_ip << " table id: " << meta.table_id << " data_ptr: 0x" << std::hex << meta.data_ptr << " base_off: 0x" << meta.base_off << " bucket_num: " << std::dec << meta.bucket_num << " node_size: " << meta.node_size << " B";
+      RDMA_LOG(INFO) << "primary_node_ip: " << remote_ip << " table id: " << meta.table_id << " data_ptr: 0x" << std::hex << meta.data_ptr << " base_off: 0x" << meta.base_off << " bucket_num: " << std::dec << meta.bucket_num << " node_size: " << meta.node_size << " B";
     }
     snooper += sizeof(HashMeta) * primary_meta_num;
     for (size_t i = 0; i < backup_meta_num; i++) {
